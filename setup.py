@@ -4,10 +4,10 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="a2d24pytools",
-    version="0.0.1",
+    name="awspytools",
+    version="0.0.3",
     author="Yusuff Lockhat",
-    author_email="yl@a2d24.com",
+    author_email="awspytools@homesync.co.za",
     description="A collection of tools to try and make AWS boto3 more pythonic",
     long_description=long_description,
     long_description_content_type="text/markdown",

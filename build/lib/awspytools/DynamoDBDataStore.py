@@ -1,4 +1,3 @@
-import os
 import copy
 import boto3
 
@@ -175,22 +174,18 @@ class DynamoDBDataStore(object):
         })
 
     def get_documents(self, query, return_index=False):
-        try:
-            pages = self.paginate(query)
-            documents = []
+        pages = self.paginate(query)
+        documents = []
 
-            for page in pages:
-                items = page['Items']
+        for page in pages:
+            items = page['Items']
 
-                for item in items:
-                    document = self.deserialize(item)
-                    if not return_index:
-                        for key in self.index_keys:
-                            document.pop(key, None)
+            for item in items:
+                document = self.deserialize(item)
+                if not return_index:
+                    for key in self.index_keys:
+                        document.pop(key, None)
 
-                    documents.append(document)
+                documents.append(document)
 
-            return documents
-        except Exception as e:
-            print(e)
-            return None
+        return documents
