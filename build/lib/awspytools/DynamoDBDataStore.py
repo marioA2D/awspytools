@@ -5,6 +5,9 @@ from boto3.dynamodb.types import TypeSerializer, TypeDeserializer
 from botocore import exceptions
 
 
+class InsufficientArgumentsException(Exception):
+    pass
+
 class IndexNotValidException(Exception):
     pass
 
@@ -17,12 +20,12 @@ class DynamoDBDataStore(object):
     serializer = TypeSerializer()
     deserializer = TypeDeserializer()
 
-    def __init__(self, table_name):
+    def __init__(self, table_name, hash_key='PK', sort_key='SK', use_default_index_keys=True):
 
         DB_SETTINGS = {
             'TableName': table_name,
-            'HashKeyName': 'PK',
-            'SortKeyName': 'SK'
+            'HashKeyName': hash_key,
+            'SortKeyName': sort_key
         }
 
         self.table_name = DB_SETTINGS['TableName']
@@ -30,13 +33,28 @@ class DynamoDBDataStore(object):
         self.sort_key_name = DB_SETTINGS.get('SortKeyName', None)
         self.index_keys = [
             self.hash_key_name,
-            self.sort_key_name,
-            'GSI1PK',
-            'GSI1SK',
-            'GSI2PK',
-            'GSI2SK',
+            self.sort_key_name
         ]
+        if use_default_index_keys:
+            self.add_index_keys([
+                'GSI1PK',
+                'GSI1SK',
+                'GSI2PK',
+                'GSI2SK',
+            ])
+
         self.client = boto3.client('dynamodb')
+
+    def add_index_keys(self, keys_to_add:list):
+        if type(keys_to_add) != list:
+            raise TypeError('Expected a list but received ', type(keys_to_add))
+            for key in keys_to_add:
+                self.add_index_key(key)
+
+    def add_index_key(self, key_to_add: str):
+        if type(keys_to_add) != str:
+            raise TypeError('Expected a string but received ', type(key_to_add))
+        self.index_keys.append(key_to_add)
 
     def save_document(self, document, index=None, parameters={}):
         document = copy.deepcopy(document)
@@ -169,11 +187,16 @@ class DynamoDBDataStore(object):
             raise ConditionalCheckFailedException
 
     def batch_request(self, request_items):
+        if not request_items:
+            raise InsufficientArgumentsException('You must provide request_items')
+
         self.client.batch_write_item(RequestItems={
             self.table_name: request_items
         })
 
-    def get_documents(self, query, return_index=False):
+    def get_documents(self, query=None, return_index=False):
+        if not query:
+            raise InsufficientArgumentsException('You must provide a query')
         pages = self.paginate(query)
         documents = []
 
@@ -189,3 +212,9 @@ class DynamoDBDataStore(object):
                 documents.append(document)
 
         return documents
+
+    def transaction_write(self, batch_items, transaction_id):
+        self.client.transact_write_items(
+            TransactItems=batch_items,
+            ClientRequestToken=transaction_id
+        )
