@@ -72,11 +72,15 @@ class DynamoDBDataStore(object):
         document[self.hash_key_name] = hash_key
         document[self.sort_key_name] = sort_key
 
+        document = json.loads(json.dumps(document), parse_float=Decimal)
+
         document = self.serialize(document)
         self._put_item(document, parameters=parameters)
 
     def _save_document_using_hash_key(self, document, hash_key, parameters={}):
         document[self.hash_key_name] = hash_key
+
+        document = json.loads(json.dumps(document), parse_float=Decimal)
 
         document = self.serialize(document)
 
@@ -197,21 +201,25 @@ class DynamoDBDataStore(object):
     def get_documents(self, query=None, return_index=False):
         if not query:
             raise InsufficientArgumentsException('You must provide a query')
-        pages = self.paginate(query)
-        documents = []
-
-        for page in pages:
-            items = page['Items']
-
-            for item in items:
-                document = self.deserialize(item)
-                if not return_index:
-                    for key in self.index_keys:
-                        document.pop(key, None)
-
-                documents.append(document)
-
-        return documents
+        try:
+            pages = self.paginate(query)
+            documents = []
+    
+            for page in pages:
+                items = page['Items']
+    
+                for item in items:
+                    document = self.deserialize(item)
+                    if not return_index:
+                        for key in self.index_keys:
+                            document.pop(key, None)
+    
+                    documents.append(document)
+    
+            return documents
+        except Exception as e:
+            print(e)
+            return None
 
     def transaction_write(self, batch_items, transaction_id):
         self.client.transact_write_items(
