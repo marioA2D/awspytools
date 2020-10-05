@@ -1,4 +1,7 @@
 import copy
+import json
+from decimal import Decimal
+
 import boto3
 
 from boto3.dynamodb.types import TypeSerializer, TypeDeserializer
@@ -48,15 +51,18 @@ class DynamoDBDataStore(object):
     def add_index_keys(self, keys_to_add:list):
         if type(keys_to_add) != list:
             raise TypeError('Expected a list but received ', type(keys_to_add))
-            for key in keys_to_add:
-                self.add_index_key(key)
+        for key in keys_to_add:
+            self.add_index_key(key)
 
     def add_index_key(self, key_to_add: str):
-        if type(keys_to_add) != str:
+        if type(key_to_add) != str:
             raise TypeError('Expected a string but received ', type(key_to_add))
         self.index_keys.append(key_to_add)
 
-    def save_document(self, document, index=None, parameters={}):
+    def save_document(self, document, index=None, parameters=None):
+        if parameters is None:
+            parameters = {}
+
         document = copy.deepcopy(document)
 
         if len(index) not in [1, 2]:
@@ -68,7 +74,9 @@ class DynamoDBDataStore(object):
             self._save_document_using_composite_key(document, hash_key=index[0], sort_key=index[1],
                                                     parameters=parameters)
 
-    def _save_document_using_composite_key(self, document, hash_key, sort_key, parameters={}):
+    def _save_document_using_composite_key(self, document, hash_key, sort_key, parameters=None):
+        if parameters is None:
+            parameters = {}
         document[self.hash_key_name] = hash_key
         document[self.sort_key_name] = sort_key
 
@@ -77,7 +85,9 @@ class DynamoDBDataStore(object):
         document = self.serialize(document)
         self._put_item(document, parameters=parameters)
 
-    def _save_document_using_hash_key(self, document, hash_key, parameters={}):
+    def _save_document_using_hash_key(self, document, hash_key, parameters=None):
+        if parameters is None:
+            parameters = {}
         document[self.hash_key_name] = hash_key
 
         document = json.loads(json.dumps(document), parse_float=Decimal)
@@ -86,8 +96,10 @@ class DynamoDBDataStore(object):
 
         self._put_item(document, parameters=parameters)
 
-    def _put_item(self, item, parameters={}):
+    def _put_item(self, item, parameters=None):
 
+        if parameters is None:
+            parameters = {}
         params = {
             'TableName': self.table_name,
             'Item': item,
@@ -141,8 +153,10 @@ class DynamoDBDataStore(object):
         paginator = self.client.get_paginator('query')
         return paginator.paginate(**parameters)
 
-    def update_document(self, index=None, parameters={}):
+    def update_document(self, index=None, parameters=None):
 
+        if parameters is None:
+            parameters = {}
         if len(index) not in [1, 2]:
             raise IndexNotValidException
 
@@ -166,7 +180,9 @@ class DynamoDBDataStore(object):
                 raise e
             raise ConditionalCheckFailedException
 
-    def delete_document(self, index=None, parameters={}):
+    def delete_document(self, index=None, parameters=None):
+        if parameters is None:
+            parameters = {}
         if len(index) not in [1, 2]:
             raise IndexNotValidException
 
