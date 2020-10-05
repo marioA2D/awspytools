@@ -5,13 +5,13 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="awspytools",
-    version="0.0.4",
+    version="0.0.5",
     author="Yusuff Lockhat",
-    author_email="awspytools@homesync.co.za",
+    author_email="awspytools@a2d24.com",
     description="A collection of tools to try and make AWS boto3 more pythonic",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/lockhaty/awspytools",
+    url="https://github.com/a2d24/awspytools",
     packages=setuptools.find_packages(),
     classifiers=[
         'Programming Language :: Python :: 3',
