@@ -1,4 +1,7 @@
 import copy
+import json
+from decimal import Decimal
+
 import boto3
 
 from boto3.dynamodb.types import TypeSerializer, TypeDeserializer
@@ -20,7 +23,7 @@ class DynamoDBDataStore(object):
     serializer = TypeSerializer()
     deserializer = TypeDeserializer()
 
-    def __init__(self, table_name, hash_key='PK', sort_key='SK', use_default_index_keys=True):
+    def __init__(self, table_name, hash_key='PK', sort_key='SK', use_default_index_keys=True,  endpoint_url=None):
 
         DB_SETTINGS = {
             'TableName': table_name,
@@ -43,20 +46,23 @@ class DynamoDBDataStore(object):
                 'GSI2SK',
             ])
 
-        self.client = boto3.client('dynamodb')
+        self.client = boto3.client('dynamodb',  endpoint_url=endpoint_url)
 
     def add_index_keys(self, keys_to_add:list):
         if type(keys_to_add) != list:
             raise TypeError('Expected a list but received ', type(keys_to_add))
-            for key in keys_to_add:
-                self.add_index_key(key)
+        for key in keys_to_add:
+            self.add_index_key(key)
 
     def add_index_key(self, key_to_add: str):
-        if type(keys_to_add) != str:
+        if type(key_to_add) != str:
             raise TypeError('Expected a string but received ', type(key_to_add))
         self.index_keys.append(key_to_add)
 
-    def save_document(self, document, index=None, parameters={}):
+    def save_document(self, document, index=None, parameters=None):
+        if parameters is None:
+            parameters = {}
+
         document = copy.deepcopy(document)
 
         if len(index) not in [1, 2]:
@@ -68,22 +74,32 @@ class DynamoDBDataStore(object):
             self._save_document_using_composite_key(document, hash_key=index[0], sort_key=index[1],
                                                     parameters=parameters)
 
-    def _save_document_using_composite_key(self, document, hash_key, sort_key, parameters={}):
+    def _save_document_using_composite_key(self, document, hash_key, sort_key, parameters=None):
+        if parameters is None:
+            parameters = {}
         document[self.hash_key_name] = hash_key
         document[self.sort_key_name] = sort_key
 
+        document = json.loads(json.dumps(document), parse_float=Decimal)
+
         document = self.serialize(document)
         self._put_item(document, parameters=parameters)
 
-    def _save_document_using_hash_key(self, document, hash_key, parameters={}):
+    def _save_document_using_hash_key(self, document, hash_key, parameters=None):
+        if parameters is None:
+            parameters = {}
         document[self.hash_key_name] = hash_key
 
+        document = json.loads(json.dumps(document), parse_float=Decimal)
+
         document = self.serialize(document)
 
         self._put_item(document, parameters=parameters)
 
-    def _put_item(self, item, parameters={}):
+    def _put_item(self, item, parameters=None):
 
+        if parameters is None:
+            parameters = {}
         params = {
             'TableName': self.table_name,
             'Item': item,
@@ -137,8 +153,10 @@ class DynamoDBDataStore(object):
         paginator = self.client.get_paginator('query')
         return paginator.paginate(**parameters)
 
-    def update_document(self, index=None, parameters={}):
+    def update_document(self, index=None, parameters=None):
 
+        if parameters is None:
+            parameters = {}
         if len(index) not in [1, 2]:
             raise IndexNotValidException
 
@@ -162,7 +180,9 @@ class DynamoDBDataStore(object):
                 raise e
             raise ConditionalCheckFailedException
 
-    def delete_document(self, index=None, parameters={}):
+    def delete_document(self, index=None, parameters=None):
+        if parameters is None:
+            parameters = {}
         if len(index) not in [1, 2]:
             raise IndexNotValidException
 
@@ -197,21 +217,25 @@ class DynamoDBDataStore(object):
     def get_documents(self, query=None, return_index=False):
         if not query:
             raise InsufficientArgumentsException('You must provide a query')
-        pages = self.paginate(query)
-        documents = []
-
-        for page in pages:
-            items = page['Items']
-
-            for item in items:
-                document = self.deserialize(item)
-                if not return_index:
-                    for key in self.index_keys:
-                        document.pop(key, None)
-
-                documents.append(document)
-
-        return documents
+        try:
+            pages = self.paginate(query)
+            documents = []
+    
+            for page in pages:
+                items = page['Items']
+    
+                for item in items:
+                    document = self.deserialize(item)
+                    if not return_index:
+                        for key in self.index_keys:
+                            document.pop(key, None)
+    
+                    documents.append(document)
+    
+            return documents
+        except Exception as e:
+            print(e)
+            return None
 
     def transaction_write(self, batch_items, transaction_id):
         self.client.transact_write_items(

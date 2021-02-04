@@ -3,7 +3,10 @@
   <component name="ChangeListManager">
     <list default="true" id="e20109c9-ffd8-4988-af57-301a91668683" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/setup.py" beforeDir="false" afterPath="$PROJECT_DIR$/setup.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/awspytools.egg-info/PKG-INFO" beforeDir="false" afterPath="$PROJECT_DIR$/awspytools.egg-info/PKG-INFO" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/lib/awspytools/DynamoDBDataStore.py" beforeDir="false" afterPath="$PROJECT_DIR$/build/lib/awspytools/DynamoDBDataStore.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/awspytools-0.0.4-py3-none-any.whl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/awspytools-0.0.4.tar.gz" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -20,7 +23,7 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="JupyterTrust" id="09bed6af-1773-46a0-913d-cfc06c17d0c8" />
+  <component name="JupyterTrust" id="e91ffddf-815a-4597-8711-efbd08582dcc" />
   <component name="ProjectId" id="1btb8o72oODEckR5NW007HzOGFh" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
@@ -31,6 +34,7 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
     <property name="node.js.selected.package.eslint" value="(autodetect)" />
@@ -193,6 +197,7 @@
       <workItem from="1590496079883" duration="5958000" />
       <workItem from="1601896281791" duration="241000" />
       <workItem from="1601896564743" duration="344000" />
+      <workItem from="1612429773730" duration="680000" />
     </task>
     <servers />
   </component>
