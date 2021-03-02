@@ -1,6 +1,7 @@
 import copy
 import json
 from decimal import Decimal
+from typing import Optional
 
 import boto3
 
@@ -11,7 +12,12 @@ from botocore import exceptions
 class InsufficientArgumentsException(Exception):
     pass
 
+
 class IndexNotValidException(Exception):
+    pass
+
+
+class InvalidArgumentsException(Exception):
     pass
 
 
@@ -147,10 +153,13 @@ class DynamoDBDataStore(object):
     def deserialize(self, document):
         return DynamoDBDataStore.deserializer.deserialize({'M': document})
 
-    def paginate(self, parameters):
+    def paginate(self, parameters=None, scan=False):
+        if not parameters:
+            parameters = {}
+
         parameters['TableName'] = self.table_name
 
-        paginator = self.client.get_paginator('query')
+        paginator = self.client.get_paginator('scan' if scan else 'query')
         return paginator.paginate(**parameters)
 
     def update_document(self, index=None, parameters=None):
@@ -214,24 +223,45 @@ class DynamoDBDataStore(object):
             self.table_name: request_items
         })
 
-    def get_documents(self, query=None, return_index=False):
-        if not query:
+    def get_documents(self, query: object = None, return_index: bool = False, scan: bool = False) -> Optional[list]:
+        """
+        Perform a SCAN or a QUERY on a DynamoDB Table by setting the scan flag or providing query parameters.
+        Optionally return the index keys by setting the return_index flag.
+
+        :param query: A query object containing DynamoDB query parameters
+        :type query: dict
+
+        :param return_index: A query object containing DynamoDB query parameters
+        :type return_index: bool
+
+        :param scan: A flag to indicate that the table should be scanned. cannot be used in conjunction with query
+        :type scan: bool
+
+        :return: The documents returned as a list of dicts or None if no documents were returned or in case of an error
+        """
+
+        if not query and not scan:
             raise InsufficientArgumentsException('You must provide a query')
+        if query and scan:
+            raise InvalidArgumentsException('You cannot specify a query when performing a scan. '
+                                            'Set scan to False if you wish to perform a query '
+                                            'or leave out the query parameter to perform a scan')
+
         try:
-            pages = self.paginate(query)
+            pages = self.paginate(query, scan)
             documents = []
-    
+
             for page in pages:
                 items = page['Items']
-    
+
                 for item in items:
                     document = self.deserialize(item)
                     if not return_index:
                         for key in self.index_keys:
                             document.pop(key, None)
-    
+
                     documents.append(document)
-    
+
             return documents
         except Exception as e:
             print(e)
