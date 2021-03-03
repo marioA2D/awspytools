@@ -223,15 +223,15 @@ class DynamoDBDataStore(object):
             self.table_name: request_items
         })
 
-    def get_documents(self, query: object = None, return_index: bool = False, scan: bool = False) -> Optional[list]:
+    def get_documents(self, query: dict = None, return_index: bool = False, scan: bool = False) -> Optional[list]:
         """
         Perform a SCAN or a QUERY on a DynamoDB Table by setting the scan flag or providing query parameters.
         Optionally return the index keys by setting the return_index flag.
 
-        :param query: A query object containing DynamoDB query parameters
+        :param query: A query dict containing DynamoDB query parameters
         :type query: dict
 
-        :param return_index: A query object containing DynamoDB query parameters
+        :param return_index: A flag indicating if the indexes for the document should be returned with the document
         :type return_index: bool
 
         :param scan: A flag to indicate that the table should be scanned. cannot be used in conjunction with query
