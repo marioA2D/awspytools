@@ -153,13 +153,13 @@ class DynamoDBDataStore(object):
     def deserialize(self, document):
         return DynamoDBDataStore.deserializer.deserialize({'M': document})
 
-    def paginate(self, parameters=None, scan=False):
+    def paginate(self, parameters: dict = None, paginator_type='query'):
         if not parameters:
             parameters = {}
 
         parameters['TableName'] = self.table_name
 
-        paginator = self.client.get_paginator('scan' if scan else 'query')
+        paginator = self.client.get_paginator(paginator_type)
         return paginator.paginate(**parameters)
 
     def update_document(self, index=None, parameters=None):
@@ -248,7 +248,8 @@ class DynamoDBDataStore(object):
                                             'or leave out the query parameter to perform a scan')
 
         try:
-            pages = self.paginate(query, scan)
+            paginator_type = 'scan' if scan else 'query'
+            pages = self.paginate(query, paginator_type)
             documents = []
 
             for page in pages:
