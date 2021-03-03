@@ -4,7 +4,6 @@ from decimal import Decimal
 from typing import Optional
 
 import boto3
-
 from boto3.dynamodb.types import TypeSerializer, TypeDeserializer
 from botocore import exceptions
 
@@ -29,7 +28,7 @@ class DynamoDBDataStore(object):
     serializer = TypeSerializer()
     deserializer = TypeDeserializer()
 
-    def __init__(self, table_name, hash_key='PK', sort_key='SK', use_default_index_keys=True,  endpoint_url=None):
+    def __init__(self, table_name, hash_key='PK', sort_key='SK', use_default_index_keys=True, endpoint_url=None):
 
         DB_SETTINGS = {
             'TableName': table_name,
@@ -52,9 +51,9 @@ class DynamoDBDataStore(object):
                 'GSI2SK',
             ])
 
-        self.client = boto3.client('dynamodb',  endpoint_url=endpoint_url)
+        self.client = boto3.client('dynamodb', endpoint_url=endpoint_url)
 
-    def add_index_keys(self, keys_to_add:list):
+    def add_index_keys(self, keys_to_add: list):
         if type(keys_to_add) != list:
             raise TypeError('Expected a list but received ', type(keys_to_add))
         for key in keys_to_add:
