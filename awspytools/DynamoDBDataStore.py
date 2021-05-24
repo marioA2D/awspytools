@@ -2,6 +2,7 @@ import copy
 import json
 from decimal import Decimal
 from typing import Optional
+from enum import Enum
 
 import boto3
 from boto3.dynamodb.types import TypeSerializer, TypeDeserializer
@@ -22,6 +23,14 @@ class InvalidArgumentsException(Exception):
 
 class ConditionalCheckFailedException(Exception):
     pass
+
+
+class ReturnValues(Enum):
+    NONE = "NONE"
+    ALL_OLD = "ALL_OLD"
+    UPDATED_OLD = "UPDATED_OLD"
+    ALL_NEW = "ALL_NEW"
+    UPDATED_NEW = "UPDATED_NEW"
 
 
 class DynamoDBDataStore(object):
@@ -161,7 +170,7 @@ class DynamoDBDataStore(object):
         paginator = self.client.get_paginator(paginator_type)
         return paginator.paginate(**parameters)
 
-    def update_document(self, index=None, parameters=None):
+    def update_document(self, index=None, parameters=None, return_attributes=False, return_index=False):
 
         if parameters is None:
             parameters = {}
@@ -180,13 +189,26 @@ class DynamoDBDataStore(object):
             'Key': key,
             **parameters
         }
+        if return_attributes:
+            params["ReturnValues"] = return_attributes.value
 
         try:
-            self.client.update_item(**params)
+            item = self.client.update_item(**params).get("Attributes")
         except exceptions.ClientError as e:
             if e.response['Error']['Code'] != 'ConditionalCheckFailedException':
                 raise e
             raise ConditionalCheckFailedException
+
+        if not item:
+            return None
+
+        deserialized_item = self.deserialize(item)
+
+        if not return_index:
+            deserialized_item.pop(self.hash_key_name, None)
+            deserialized_item.pop(self.sort_key_name, None)
+
+        return deserialized_item
 
     def delete_document(self, index=None, parameters=None):
         if parameters is None:

@@ -1,1 +1,1 @@
-from .DynamoDBDataStore import DynamoDBDataStore
+from .DynamoDBDataStore import DynamoDBDataStore, ReturnValues
