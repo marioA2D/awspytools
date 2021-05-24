@@ -161,32 +161,29 @@ class DynamoDBDataStore(object):
         paginator = self.client.get_paginator(paginator_type)
         return paginator.paginate(**parameters)
 
-    def update_document(self, index=None, parameters=None):
+    def update_document(self, index=None, parameters=None, return_attributes=False):
 
         if parameters is None:
             parameters = {}
         if len(index) not in [1, 2]:
             raise IndexNotValidException
 
-        key = {
-            self.hash_key_name: {'S': index[0]}
-        }
+        key = {self.hash_key_name: {"S": index[0]}}
 
         if len(index) == 2:
-            key[self.sort_key_name] = {'S': index[1]}
+            key[self.sort_key_name] = {"S": index[1]}
 
-        params = {
-            'TableName': self.table_name,
-            'Key': key,
-            **parameters
-        }
+        params = {"TableName": self.table_name, "Key": key, **parameters}
 
         try:
-            self.client.update_item(**params)
+            item = self.client.update_item(**params).get("Attributes", None)
         except exceptions.ClientError as e:
-            if e.response['Error']['Code'] != 'ConditionalCheckFailedException':
+            if e.response["Error"]["Code"] != "ConditionalCheckFailedException":
                 raise e
             raise ConditionalCheckFailedException
+
+        if return_attributes and item:
+            return self.deserialize(item)
 
     def delete_document(self, index=None, parameters=None):
         if parameters is None:
