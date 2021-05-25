@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: awspytools
-Version: 0.0.6
+Version: 0.1.0
 Summary: A collection of tools to try and make AWS boto3 more pythonic
 Home-page: https://github.com/a2d24/awspytools
 Author: Yusuff Lockhat
